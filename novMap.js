@@ -1,23 +1,37 @@
 var NovMap = function (element, mapOptions, callback) {
     var self = this;
 
+    self.MINZOOM = 0;
+    self.MAXZOOM = 18;
+
     self.map = null;
     self.markers = [];
     self.infoBoxes = [];
     self.geocoder = new google.maps.Geocoder();
     self.center = null;
     self.callbacks = {};
+    self.mapOptions = {
+        zoom: 9,
+        scrollwheel: false,
+        draggable: true,
+        disableDefaultUI: true,
+        center: new google.maps.LatLng(48.1024666, 4.1703227)
+    };
 
     var onWindowLoad = function () {
-        // var mapElement = document.querySelector( element );
 
         if (!element) throw new Error('Invalid DOM element provided for map. Could not find provided map container.');
 
-        self.map = new google.maps.Map(element, mapOptions);
+        self.mapOptions = Object.assign(self.mapOptions, mapOptions);
 
-        if (mapOptions.center) {
-            self.center = mapOptions.center;
-        }
+        console.log(self.mapOptions);
+
+        self.map = new google.maps.Map(element, self.mapOptions);
+
+
+        // if (mapOptions.center) {
+        //     self.center = self.mapOptions.center;
+        // }
 
         google.maps.event.addListener(self.map, 'resize', function () {
             self.showAllMarkers.apply(self);
@@ -233,4 +247,31 @@ NovMap.prototype.setCenter = function (latLng, animated) {
         this.getMap().panTo(latLng);
     else
         this.getMap().setCenter(latLng);
+}
+
+NovMap.prototype.setZoom = function (zoom) {
+    if (isNaN(zoom) || zoom < this.MINZOOM || zoom > this.MAXZOOM) {
+        console.warn('Please provide a valid integer for the zoom property from', MINZOOM, 'to', MAXZOOM)
+        return;
+    }
+
+    this.getMap().setZoom(zoom);
+}
+
+
+NovMap.prototype.drawLine = function (coords, color, width, opacity) {
+    color = color || '#00ff00';
+    opacity = (opacity > 0 && opacity < 1) ? opacity : 1;
+    width = width || 2;
+
+    var path = new google.maps.Polyline({
+        path: coords,
+        geodesic: true,
+        strokeColor: color,
+        strokeOpacity: opacity,
+        strokeWeight: width
+    });
+
+    path.setMap(this.map);
+
 }
