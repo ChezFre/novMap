@@ -6,6 +6,7 @@ var NovMap = function (element, mapOptions, callback) {
 
     self.map = null;
     self.markers = [];
+    self.polylines = [];
     self.infoBoxes = [];
     self.geocoder = new google.maps.Geocoder();
     self.center = null;
@@ -14,7 +15,7 @@ var NovMap = function (element, mapOptions, callback) {
         zoom: 9,
         scrollwheel: false,
         draggable: true,
-        disableDefaultUI: true,
+        disableDefaultUI: false,
         center: new google.maps.LatLng(48.1024666, 4.1703227)
     };
 
@@ -24,14 +25,7 @@ var NovMap = function (element, mapOptions, callback) {
 
         self.mapOptions = Object.assign(self.mapOptions, mapOptions);
 
-        console.log(self.mapOptions);
-
         self.map = new google.maps.Map(element, self.mapOptions);
-
-
-        // if (mapOptions.center) {
-        //     self.center = self.mapOptions.center;
-        // }
 
         google.maps.event.addListener(self.map, 'resize', function () {
             self.showAllMarkers.apply(self);
@@ -203,6 +197,14 @@ NovMap.prototype.getMarkers = function () {
     return this.markers;
 };
 
+
+/*
+ *
+ */
+NovMap.prototype.getPolylines = function () {
+    return this.polylines;
+};
+
 /*
  *
  */
@@ -217,10 +219,30 @@ NovMap.prototype.getInfoBoxes = function () {
 NovMap.prototype.showAllMarkers = function () {
     var bounds = new google.maps.LatLngBounds();
 
-    if (this.getMarkers().length == 0) return;
+    if (this.getMarkers().length === 0) return;
 
     for (i = 0; i < this.getMarkers().length; i++) {
         bounds.extend(this.getMarkers()[i].getPosition());
+    }
+
+    this.setBounds(bounds);
+}
+
+NovMap.prototype.showAll = function () {
+    var bounds = new google.maps.LatLngBounds();
+
+    if (this.getMarkers().length === 0 && this.getPolylines().length === 0) return;
+
+    for (var i = 0; i < this.getMarkers().length; i++) {
+        bounds.extend(this.getMarkers()[i].getPosition());
+    }
+
+    for (var j = 0; j < this.getPolylines().length; j++) {
+        var ar = this.getPolylines()[j].getPath().getArray();
+
+        for (var k = 0, l = ar.length; i < l; i++) {
+            bounds.extend(ar[i]);
+        }
     }
 
     this.setBounds(bounds);
@@ -264,6 +286,8 @@ NovMap.prototype.drawLine = function (coords, color, width, opacity) {
     opacity = (opacity > 0 && opacity < 1) ? opacity : 1;
     width = width || 2;
 
+    console.log(coords);
+
     var path = new google.maps.Polyline({
         path: coords,
         geodesic: true,
@@ -274,4 +298,5 @@ NovMap.prototype.drawLine = function (coords, color, width, opacity) {
 
     path.setMap(this.map);
 
+    this.polylines.push(path);
 }
